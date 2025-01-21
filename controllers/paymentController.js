@@ -94,7 +94,7 @@ const paymentVerification = async (req, res) => {
     await order.save();
 
     res.redirect(
-      `https://cegujarat-etrainindia.web.app/payment-success?reference=${razorpay_payment_id}`
+      `https://cegujarat.etraineducation.com/payment-success?reference=${razorpay_payment_id}`
     );
   } catch (error) {
     res.status(500).json({
