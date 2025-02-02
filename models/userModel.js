@@ -8,12 +8,12 @@ const userSchema = new mongoose.Schema(
       unique: true,
       trim: true,
     },
-    firstName: {
+    fname: {
       type: String,
       required: true,
       trim: true,
     },
-    lastName: {
+    lname: {
       type: String,
       required: true,
       trim: true,
@@ -23,36 +23,41 @@ const userSchema = new mongoose.Schema(
       required: true,
       lowercase: true,
       trim: true,
-      unique: true,
       match: [/^\S+@\S+\.\S+$/, "Please provide a valid email address"],
     },
-    phoneNumber: {
+    mobile: {
       type: String,
       required: true,
-      unique: true,
       match: [/^\d{10}$/, "Please provide a valid 10-digit mobile number"],
     },
-    userType: {
+    usertype: {
       type: String,
       required: true,
-      enum: [
-        "Student",
-        "Freelancer",
-        "Working Professionals",
-        "Un-employed",
-        "Admin",
-      ],
+      enum: ["Freelancer", "Working Professionals", "Un-employed", "Student"],
       default: "Student",
     },
-    courseName: {
+    coursename: {
       type: String,
-      required: false,
+      required: true,
+      trim: true,
+    },
+    coursecode: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    college: {
+      type: String,
+      required: true,
+      trim: true,
+    },
+    university: {
+      type: String,
+      required: true,
       trim: true,
     },
   },
-  {
-    timestamps: true,
-  }
+  { timestamps: true }
 );
 
 module.exports = mongoose.model("User", userSchema);

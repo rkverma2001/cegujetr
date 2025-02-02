@@ -4,21 +4,28 @@ const create = async (req, res) => {
   try {
     const {
       urn,
-      firstName,
-      lastName,
+      fname,
+      lname,
       email,
-      phoneNumber,
-      userType,
-      courseName,
+      mobile,
+      usertype,
+      coursename,
+      coursecode,
+      college,
+      university,
     } = req.body;
 
     if (
       !urn ||
-      !firstName ||
-      !lastName ||
+      !fname ||
+      !lname ||
       !email ||
-      !phoneNumber ||
-      !userType
+      !mobile ||
+      !usertype ||
+      !coursename ||
+      !coursecode ||
+      !college ||
+      !university
     ) {
       return res.status(400).json({
         result: "Fail",
@@ -26,17 +33,22 @@ const create = async (req, res) => {
       });
     }
 
+    // Create new user
     const newUser = new User({
       urn,
-      firstName,
-      lastName,
+      fname,
+      lname,
       email,
-      phoneNumber,
-      userType,
-      courseName,
+      mobile,
+      usertype,
+      coursename,
+      coursecode,
+      college,
+      university,
     });
 
     const savedUser = await newUser.save();
+
     res.status(201).json({
       result: "Success",
       message: "User created successfully",
@@ -45,7 +57,8 @@ const create = async (req, res) => {
   } catch (error) {
     res.status(500).json({
       result: "Error",
-      message: error.message,
+      message: "Internal Server Error",
+      error: error.message,
     });
   }
 };

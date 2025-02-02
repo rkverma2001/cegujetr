@@ -12,11 +12,11 @@ dayjs.extend(utc);
 dayjs.extend(timezone);
 
 const sendOtp = async (req, res) => {
-  const { phoneNumber } = req.body;
+  const { mobile } = req.body;
 
   try {
     // Validate phone number
-    if (!phoneNumber) {
+    if (!mobile) {
       return res.status(400).json({ error: "Phone number is required" });
     }
 
@@ -29,11 +29,11 @@ const sendOtp = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedOtp = await bcrypt.hash(otp, salt);
 
-    let otpRecord = await Otp.findOne({ phoneNumber });
+    let otpRecord = await Otp.findOne({ mobile });
 
     if (!otpRecord) {
       otpRecord = new Otp({
-        phoneNumber,
+        mobile,
         otp: hashedOtp,
         expiry: dayjs().tz("Asia/Kolkata").add(5, "minute"),
       });
@@ -45,9 +45,9 @@ const sendOtp = async (req, res) => {
     await otpRecord.save();
 
     const params = {
-      sender: "ETREDU", // Replace with your sender ID
-      apikey: process.env.SPRINGEDGE_API_KEY, // Use environment variable for API key
-      to: [`+91${phoneNumber}`], // Phone number
+      sender: "ETREDU", // Sender Name
+      apikey: process.env.SPRINGEDGE_API_KEY, // Your API Key
+      to: [`+91${mobile}`], // Phone number
       message: `Hello Learner! Your OTP for EtrainIndia is ${otp}. This OTP is valid for 5 minutes.`,
       format: "json",
     };
@@ -57,7 +57,7 @@ const sendOtp = async (req, res) => {
       if (err) {
         return res.status(500).json({ error: "Failed to send OTP" });
       }
-      res.status(200).json({ message: `OTP sent successfully ${otp}` });
+      res.status(200).json({ message: `OTP sent successfully` });
     });
   } catch (error) {
     res.status(500).json({ error: "Failed to send OTP" });
@@ -65,17 +65,17 @@ const sendOtp = async (req, res) => {
 };
 
 const verifyOtp = async (req, res) => {
-  const { phoneNumber, otp } = req.body;
+  const { mobile, otp } = req.body;
 
   try {
-    if (!phoneNumber || !otp) {
+    if (!mobile || !otp) {
       return res
         .status(400)
         .json({ error: "Phone number and OTP are required" });
     }
 
     // Find the OTP record
-    const otpRecord = await Otp.findOne({ phoneNumber });
+    const otpRecord = await Otp.findOne({ mobile });
     if (!otpRecord || dayjs().tz("Asia/Kolkata").isAfter(otp.expiry)) {
       return res.status(404).json({ error: "OTP not found or expired." });
     }
@@ -97,14 +97,14 @@ const verifyOtp = async (req, res) => {
     }
 
     // Check user existence
-    const user = await User.findOne({ phoneNumber });
+    const user = await User.find({ mobile });
     if (!user) {
       return res.status(404).json({ error: "User not found." });
     }
 
     // Generate JWT
     const token = jwt.sign(
-      { _id: user._id, phoneNumber: user.phoneNumber },
+      { _id: user._id, mobile: user.mobile },
       process.env.JWT_SECRET,
       { expiresIn: "30d" }
     );
@@ -114,13 +114,7 @@ const verifyOtp = async (req, res) => {
 
     return res.status(200).json({
       message: "OTP verified successfully",
-      data: {
-        urn: user.urn,
-        firstName: user.firstName,
-        email: user.email,
-        phoneNumber: user.phoneNumber,
-        courseName: user.courseName,
-      },
+      data: user,
       token,
     });
   } catch (error) {

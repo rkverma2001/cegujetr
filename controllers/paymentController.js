@@ -21,6 +21,16 @@ const checkout = async (req, res) => {
         .json({ success: false, message: "Missing required fields" });
     }
 
+    const existingOrder = await Order.findOne({
+      urn,
+      paymentStatus: "PAYMENT PENDING",
+    });
+
+    // If there is a pending order, cancel it and allow a new one to be created
+    if (existingOrder) {
+      await Order.deleteOne({ _id: existingOrder._id });
+    }
+
     const options = {
       amount: Number(amount * 100),
       currency: "INR",
@@ -64,7 +74,14 @@ const paymentVerification = async (req, res) => {
     if (!order) {
       return res
         .status(404)
-        .json({ success: false, message: "Order not found" });
+        .json({ success: false, message: "Order not found or expired" });
+    }
+
+    if (order.paymentStatus === "PAYMENT COMPLETED") {
+      return res.status(400).json({
+        success: false,
+        message: "Payment already completed",
+      });
     }
 
     // Generate expected signature
