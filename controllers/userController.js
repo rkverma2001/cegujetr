@@ -50,15 +50,13 @@ const create = async (req, res) => {
     const savedUser = await newUser.save();
 
     res.status(201).json({
-      result: "Success",
-      message: "User created successfully",
-      data: savedUser,
+      result: "SUCCESS",
+      error: null,
     });
   } catch (error) {
     res.status(500).json({
-      result: "Error",
-      message: "Internal Server Error",
-      error: error.message,
+      result: "FAIL",
+      error: "something went wrong",
     });
   }
 };
