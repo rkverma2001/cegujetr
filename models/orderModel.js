@@ -25,6 +25,11 @@ const orderSchema = new mongoose.Schema(
       unique: true,
       trim: true,
     },
+    invoiceNumber: {
+      type: Number,
+      unique: true, // Ensures invoice numbers are unique
+      sparse: true, // Allows this field to be optional (only present after payment)
+    },
   },
   {
     timestamps: true,
@@ -32,3 +37,4 @@ const orderSchema = new mongoose.Schema(
 );
 
 module.exports = mongoose.model("Order", orderSchema);
+

@@ -52,25 +52,32 @@ const updateOrder = async (req, res) => {
 
 const viewOrder = async (req, res) => {
   try {
-    const { urn } = req.params; // Assuming the URN is passed as a URL parameter
+    const { urn } = req.query; // Get URN from query parameters
 
     if (!urn) {
-      return res
-        .status(400)
-        .json({ success: false, message: "URN is required" });
+      return res.status(400).json({
+        success: false,
+        message: "URN is required",
+      });
     }
 
-    const order = await Order.findOne({ urn });
+    const order = await Order.findOne({ urn }).lean();
 
     if (!order) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Order not found" });
+      return res.status(404).json({
+        success: false,
+        message: "Order not found",
+      });
     }
 
-    res.status(200).json({ success: true, order });
+    return res.status(200).json({ success: true, order });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error("Error fetching order:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal Server Error",
+      error: error.message,
+    });
   }
 };
 

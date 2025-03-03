@@ -12,11 +12,11 @@ const ApplicationSchema = new mongoose.Schema(
     },
     paymentdate: {
       type: String,
-      required: true,
+      default: null,
     },
     amount: {
       type: String,
-      required: true,
+      default: null,
     },
     coursestartdate: {
       type: String,

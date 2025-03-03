@@ -1,4 +1,5 @@
 const User = require("../models/userModel");
+const Application = require("../models/applicationModel");
 
 const create = async (req, res) => {
   try {
@@ -33,21 +34,37 @@ const create = async (req, res) => {
       });
     }
 
-    // Create new user
-    const newUser = new User({
-      urn,
-      fname,
-      lname,
-      email,
-      mobile,
-      usertype,
-      coursename,
-      coursecode,
-      college,
-      university,
-    });
+    const existingUser = await User.findOne({ urn });
+    if (existingUser) {
+      return res.status(400).json({
+        result: "FAIL",
+        error: "URN must be unique. This URN already exists.",
+      });
+    }
 
-    const savedUser = await newUser.save();
+    // Create new user
+    
+    let user = await User.findOne({ urn });
+    if (!user) {
+      user = new User({ urn, fname, lname, email, mobile, usertype, coursename, coursecode, college, university });
+      await user.save();
+    }
+
+    let application = await Application.findOne({ urn });
+    if (!application) {
+      application = new Application({
+        urn,
+        coursecode,
+        paymentdate: null,
+        amount: null,
+        coursestartdate: null,
+        courseenddate: null,
+        certcompletedate: null,
+        certificateno: null,
+        status: "USER_REGISTERED",
+      });
+      await application.save();
+    }
 
     res.status(201).json({
       result: "SUCCESS",

@@ -7,6 +7,7 @@ const create = async (req, res) => {
   try {
     const { urn } = req.body;
 
+    // Fetch user details
     let user;
     if (!urn) {
       user = await User.find();
@@ -17,43 +18,44 @@ const create = async (req, res) => {
       }
     }
 
-     // Check if an application already exists for this URN
-     const existingApplication = await Application.findOne({ urn });
-     if (existingApplication) {
-       return res.status(400).json({ message: "Application already exists for this user" });
-     }
+    // Fetch the most recent order
+    const order = await Order.find({ urn }).sort({ createdAt: -1 }).limit(1);
+    const latestOrder = order[0]; // Get the latest order
 
-    const order = await Order.findOne({ urn }).sort({
-      createdAt: -1,
-    });
-    if (!order) {
-      return res
-        .status(404)
-        .json({ message: "No recent order found for user" });
+    if (!latestOrder) {
+      return res.status(404).json({ message: "No recent order found for user" });
     }
 
-    const formatDate = (date) => {
-      return date ? new Date(date).toLocaleDateString("en-GB") : null;
-    };
+    const dateObj = new Date();
+    const day = String(dateObj.getDate()).padStart(2, "0");
+    const month = String(dateObj.getMonth() + 1).padStart(2, "0"); // Month is zero-based
+    const year = dateObj.getFullYear();
+    const currentDate = `${day}-${month}-${year}`;
 
-    const newApplication = new Application({
-      urn: urn,
-      coursecode: user.coursecode,
-      paymentdate: formatDate(order.createdAt),
-      amount: "15000", // This should be dynamic
-      coursestartdate: null,
-      courseenddate: null,
-      certcompletedate: null,
-      certificateno: null,
-      status: "PAYMENT_COMPLETED",
-    });
+    // ✅ Auto-update Application when payment is completed
+    if (latestOrder.paymentStatus === "PAYMENT COMPLETED") {
+      const updatedApplication = await Application.findOneAndUpdate(
+        { urn },
+        {
+          paymentdate: currentDate,
+          amount: "8840",
+          status: "PAYMENT_COMPLETED",
+        },
+        { new: true }
+      );
 
-    await newApplication.save();
-    res.status(201).json(newApplication);
+      // Check if Application update was successful
+      if (!updatedApplication) {
+        return res.status(404).json({ message: "Application not found for update" });
+      }
+    }
+
+    res.status(201).json({ success: true, message: "Payment status updated successfully" });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
+
 
 const view = async (req, res) => {
   try {
@@ -154,4 +156,38 @@ const remove = async (req, res) => {
   }
 };
 
-module.exports = { create, view, update, remove };
+const enrollCourse = async (req, res) => {
+  try {
+    
+    const { urn } = req.body;
+
+    if (!urn) {
+
+      return res.status(400).json({ success: false, message: "URN is required in the request body" });
+    }
+
+    const dateObj = new Date();
+    const day = String(dateObj.getDate()).padStart(2, "0");
+    const month = String(dateObj.getMonth() + 1).padStart(2, "0"); // Month is zero-based
+    const year = dateObj.getFullYear();
+    const currentDate = `${day}-${month}-${year}`;
+
+    // Find and update the application
+    const application = await Application.findOneAndUpdate(
+      { urn },
+      { status: "COURSE_STARTED", coursestartdate: currentDate },
+      { new: true }
+    );
+
+    if (!application) {
+      return res.status(404).json({ success: false, message: "Application not found" });
+    }
+    res.status(200).json({ success: true, message: "Course started successfully" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Internal server error", error: error.message });
+  }
+};
+
+
+
+module.exports = { create, view, update, remove, enrollCourse };

@@ -4,6 +4,6 @@ const router = express.Router();
 
 router.post("/create", createOrder);
 router.put("/update", updateOrder);
-router.get("/:urn", viewOrder);
+router.get("/view", viewOrder);
 
 module.exports = router;
